@@ -1,4 +1,5 @@
 import mysql.connector as sqltor
+from tabulate import tabulate
 
 
 def create_database_and_table():
@@ -123,12 +124,10 @@ def show_users():
     print("\nMembers of Library:")
 
     if users:
-        for user in users:
-            print(
-                "ID: {}, Name: {}, Phone Number: {}".format(user[0], user[1], user[2])
-            )
+        headers = ["ID", "Name", "Phone Number"]
+        print(tabulate(users, headers=headers, tablefmt="pretty"))
     else:
-        print("No members.")
+        print("There are no memebers in the library.")
 
 
 def show_books():
@@ -138,19 +137,20 @@ def show_books():
     print("\nBooks of Library:")
 
     if books:
+        data = []
+
         for book in books:
             if book[3] == 1:
                 available = "Yes"
             else:
                 available = "No"
 
-            print(
-                "ID: {}, Title: {}, Author: {}, Available: {}".format(
-                    book[0], book[1], book[2], available
-                )
-            )
+            data.append([book[0], book[1], book[2], available])
+
+        headers = ["ID", "Title", "Author", "Available"]
+        print(tabulate(data, headers=headers, tablefmt="pretty"))
     else:
-        print("No books.")
+        print("There are no books in the library.")
 
 
 def show_rented_books():
@@ -160,14 +160,10 @@ def show_rented_books():
     print("\nRented Books:")
 
     if rented_books:
-        for book in rented_books:
-            print(
-                "ID: {}, User ID: {}, Book ID: {}, Rental Date: {}".format(
-                    book[0], book[1], book[2], book[3]
-                )
-            )
+        headers = ["ID", "User ID", "Book ID", "Rental Date"]
+        print(tabulate(rented_books, headers=headers, tablefmt="pretty"))
     else:
-        print("No rented book.")
+        print("No books has been rented.")
 
 
 def show_returned_books():
@@ -177,24 +173,33 @@ def show_returned_books():
     print("\nReturned Books:")
 
     if returned_books:
-        for book in returned_books:
-            print("ID: {}, Rental ID: {}".format(book[0], book[1]))
+        headers = ["ID", "Rental ID", "Return Date"]
+        print(tabulate(returned_books, headers=headers, tablefmt="pretty"))
     else:
-        print("No book has been returned.")
+        print("No books has been returned.")
+
+
+def show_menu():
+    menu_options = [
+        [1, "Add Member", "Register a new member with name and phone number"],
+        [2, "Add Book", "Register a new book with title and author"],
+        [3, "Rent Book", "Rent a book by entering user ID and book ID"],
+        [4, "Return Book", "Return a rented book using the rental ID"],
+        [5, "Show members", "Display all registered members"],
+        [6, "Show Books", "Display all registered books"],
+        [7, "Show Rented Books", "Display all currently rented books"],
+        [8, "Show Returned Books", "Display all returned books"],
+        [9, "Drop DB!!!", "Danger! Drop the entire library database"],
+        [10, "Exit", "Exit the library manager"],
+    ]
+
+    headers = ["Option", "Command", "Description"]
+    print(tabulate(menu_options, headers=headers, tablefmt="pretty"))
 
 
 while True:
     print("\nLibrary Manager")
-    print("1. Add User")
-    print("2. Add Book")
-    print("3. Rent Book")
-    print("4. Return Book")
-    print("5. Exit")
-    print("6. Drop DB!!!")
-    print("7. Show Users")
-    print("8. Show Books")
-    print("9. Show Rented Books")
-    print("10. Show Returned Books")
+    show_menu()
 
     choice = int(input("Enter: "))
 
@@ -214,24 +219,24 @@ while True:
         rental_id = int(input("Enter rental ID: "))
         register_return(rental_id)
     elif choice == 5:
-        cursor.close()
-        connection.close()
-        print("Exiting the library manager.")
-        break
+        show_users()
     elif choice == 6:
+        show_books()
+    elif choice == 7:
+        show_rented_books()
+    elif choice == 8:
+        show_returned_books()
+    elif choice == 9:
         cursor.execute("DROP DATABASE librarymanager")
         print("Database dropped.")
         cursor.close()
         connection.close()
         print("Exiting the library manager.")
         break
-    elif choice == 7:
-        show_users()
-    elif choice == 8:
-        show_books()
-    elif choice == 9:
-        show_rented_books()
     elif choice == 10:
-        show_returned_books()
+        cursor.close()
+        connection.close()
+        print("Exiting the library manager.")
+        break
     else:
         print("Invalid choice. Try again.")
