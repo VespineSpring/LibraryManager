@@ -36,6 +36,7 @@ def create_database_and_table():
                 user_id INT,
                 book_id INT,
                 rental_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                returned INT DEFAULT 0,
                 FOREIGN KEY (user_id) REFERENCES users(user_id),
                 FOREIGN KEY (book_id) REFERENCES books(book_id)
             )
@@ -46,7 +47,8 @@ def create_database_and_table():
             """CREATE TABLE IF NOT EXISTS returned_books (
                 return_id INT AUTO_INCREMENT PRIMARY KEY,
                 rental_id INT,
-                return_date DATETIME DEFAULT CURRENT_TIMESTAMP
+                return_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (rental_id) REFERENCES rented_books(rental_id)
             )
             """
         )
@@ -78,7 +80,7 @@ def register_user(name, phone):
 def register_book(title, author):
     cursor.execute("INSERT INTO books (title, author) VALUES (%s, %s)", (title, author))
     connection.commit()
-    print(str(title), "by", str(author), "has been added.")
+    print("{} by {} has been added.".format(title, author))
 
 
 def register_rental(user_id, book_id):
@@ -92,7 +94,9 @@ def register_rental(user_id, book_id):
         )
         cursor.execute("UPDATE books SET available = 0 WHERE book_id = %s", (book_id,))
         connection.commit()
-        print(f"Book rented successfully.")
+        print(
+            "Book {} has been rented to user {} successfully.".format(book_id, user_id)
+        )
     else:
         print("Book is not available right now.")
 
@@ -110,9 +114,11 @@ def register_return(rental_id):
             "INSERT INTO returned_books (rental_id) VALUES (%s)", (rental_id,)
         )
         cursor.execute("UPDATE books SET available = 1 WHERE book_id = %s", (book_id,))
-        cursor.execute("DELETE FROM rented_books WHERE rental_id = %s", (rental_id,))
+        cursor.execute(
+            "UPDATE rented_books SET returned = 1 WHERE rental_id = %s", (rental_id,)
+        )
         connection.commit()
-        print("Book has been returned.")
+        print("Book {} has been returned successfully.".format(book_id))
     else:
         print("Rental ID not found.")
 
@@ -160,8 +166,18 @@ def show_rented_books():
     print("\nRented Books:")
 
     if rented_books:
-        headers = ["ID", "User ID", "Book ID", "Rental Date"]
-        print(tabulate(rented_books, headers=headers, tablefmt="pretty"))
+        data = []
+
+        for book in rented_books:
+            if book[4] == 1:
+                returned = "Yes"
+            else:
+                returned = "No"
+
+            data.append([book[0], book[1], book[2], book[3], returned])
+
+        headers = ["ID", "User ID", "Book ID", "Rental Date", "Returned"]
+        print(tabulate(data, headers=headers, tablefmt="pretty"))
     else:
         print("No books has been rented.")
 
@@ -190,7 +206,8 @@ def show_menu():
         [7, "Show Rented Books", "Display all currently rented books"],
         [8, "Show Returned Books", "Display all returned books"],
         [9, "Drop DB!!!", "Danger! Drop the entire library database"],
-        [10, "Exit", "Exit the library manager"],
+        [10, "Drop Table!", "Danger! Drop the entire table"],
+        [11, "Exit", "Exit the library manager"],
     ]
 
     headers = ["Option", "Command", "Description"]
@@ -234,6 +251,20 @@ while True:
         print("Exiting the library manager.")
         break
     elif choice == 10:
+        while True:
+            table = input("Table Name: ")
+
+            cursor.execute("SHOW TABLES LIKE %s", (table,))
+            result = cursor.fetchone()
+
+            if result:
+                cursor.execute("DROP TABLE {}".format(table))
+                connection.commit()
+                print("Table Dropped.")
+                break
+            else:
+                print("Wrong name.")
+    elif choice == 11:
         cursor.close()
         connection.close()
         print("Exiting the library manager.")
