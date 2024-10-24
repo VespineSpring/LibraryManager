@@ -307,7 +307,7 @@ def show_commands_menu():
         [2, "Add Book", "Register a new book with title and author."],
         [3, "Rent Book", "Rent a book by entering user ID and book ID."],
         [4, "Return Book", "Return a rented book using the rental ID."],
-        [5, "Show members", "Display all registered members."],
+        [5, "Show Members", "Display all registered members."],
         [6, "Show Books", "Display all registered books."],
         [7, "Show Rented Books", "Display all currently rented books."],
         [8, "Show Returned Books", "Display all returned books."],
